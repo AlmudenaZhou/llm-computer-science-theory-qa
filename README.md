@@ -24,7 +24,7 @@ This project will consist in a chatbot that will answer some computer science qu
 In the terminal run:
 
 ```
-conda create --name <project_name> --file=conda.yml
+conda env create --name <project_name> --file=environment.yml
 ```
 This will create the environment with the dependencies
 
