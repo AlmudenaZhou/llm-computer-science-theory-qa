@@ -1,6 +1,44 @@
 version: '3.8'
 
 services:
+  magic-platform:
+    env_file:
+      - ./retrieval/.env.dev
+      - .env
+    build:
+      context: ./retrieval/
+      dockerfile: Dockerfile
+    command: /app/run_app.sh mage start retrieval
+    ports:
+      - "6789:6789"
+    volumes:
+      # Mount your local codebase to the container.
+      - ./retrieval:/home/src
+      # Store the data output on local machine to easily debug (optional).
+      - ./retrieval/.mage_data:/home/src/mage_data
+      - ./data:/home/src/data
+      - ./modules:/home/src/retrieval/modules
+    restart: on-failure:5
+    networks:
+      - app-network
+    depends_on:
+      - magic-database
+    stdin_open: true # used for interactive debugging
+    tty: true # used for interactive debugging
+
+  magic-database:
+    image: pgvector/pgvector:0.6.0-pg16
+    env_file:
+      - ./retrieval/.env.dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./retrieval/.postgres/data:/var/lib/postgresql/data
+      # Custom database initialization scripts (optional).
+      - ./retrieval/database:/docker-entrypoint-initdb.d
+    restart: always
+    networks:
+      - app-network
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
     container_name: elasticsearch
@@ -10,14 +48,27 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    networks:
+      - app-network
 
   ollama:
     image: ollama/ollama
     container_name: ollama
     volumes:
-      - ollama:/root/.ollama
+      - ./ollama:/root/.ollama
     ports:
       - "11434:11434"
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+              
 volumes:
   ollama:
+
+networks:
+  app-network:
+    driver: bridge

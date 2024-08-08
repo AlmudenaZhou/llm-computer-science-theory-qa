@@ -2,3 +2,14 @@ data/*
 .env
 *.pyc
 __pycache__
+ollama/*
+
+retrieval/.mage_data
+retrieval/.postgres
+
+# data files
+retrieval/mage_ai/server/data/files/**
+default_repo
+retrieval/instance_metadata.json
+retrieval/mage_data/
+retrieval/retrieval/.*
