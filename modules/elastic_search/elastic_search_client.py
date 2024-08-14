@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import List
 
@@ -18,6 +19,7 @@ class ElasticSearchClient:
     -p 9300:9300 \
     -e "discovery.type=single-node" \
     -e "xpack.security.enabled=false" \
+    -v elasticsearch_data:/usr/share/elasticsearch/data \
     docker.elastic.co/elasticsearch/elasticsearch:8.4.3
 
     and check it with:
@@ -25,7 +27,8 @@ class ElasticSearchClient:
     curl http://localhost:9200
     """
 
-    def __init__(self, host='localhost', port='9200'):
+    def __init__(self, host=os.getenv("ELASTICSEARCH_HOST", "localhost"),
+                 port=os.getenv("ELASTICSEARCH_PORT", 9200)):
         self.client = Elasticsearch(f"http://{host}:{port}")
 
         logger.info(self.client.info())
