@@ -33,3 +33,8 @@ For activating the conda environment the following times, run:
 ```
 conda activate <project_name>
 ```
+
+## Local Env Setup
+
+1. Inside retrieval folder, create the folders: `.mage_data` and `.postgres/data`.
+2. Copy `.env_example`, renamed the file into `.env` and fill the fields with your values.
