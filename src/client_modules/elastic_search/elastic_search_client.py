@@ -29,7 +29,10 @@ class ElasticSearchClient:
 
     def __init__(self, host=os.getenv("ELASTICSEARCH_HOST", "localhost"),
                  port=os.getenv("ELASTICSEARCH_PORT", 9200)):
-        self.client = Elasticsearch(f"http://{host}:{port}")
+        
+        url = f"http://{host}:{port}"
+        logger.info(f"Starting ElasticSearch {url}")
+        self.client = Elasticsearch(url)
 
         logger.info(self.client.info())
 
@@ -75,3 +78,14 @@ class ElasticSearchClient:
         documents = [hit['_source'] for hit in response['hits']['hits']]
         return documents
     
+    def index_exists(self, index_name):
+        if self.client.indices.exists(index=index_name):
+            logger.info(f"The index '{index_name}' already exists.")
+            return True
+        else:
+            logger.info(f"The index '{index_name}' does not exists.")
+            return False
+
+    def delete_index(self, index_name):
+        self.client.indices.delete(index=index_name, ignore_unavailable=True)
+        logger.info(f"Deleted index '{index_name}'")

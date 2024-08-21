@@ -2,7 +2,7 @@ import os
 
 from openai import AzureOpenAI
 
-from modules.embeddings.base import AbstractEmbeddingModel
+from src.client_modules.embeddings.base import AbstractEmbeddingModel
 
 
 class AzureOpenAIEmbeddingModel(AbstractEmbeddingModel):

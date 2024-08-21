@@ -1,4 +1,4 @@
-from modules.embeddings.transformer import TransformerEmbeddingModel
+from src.client_modules.embeddings.transformer import TransformerEmbeddingModel
 
 
 from typing import List, Tuple, Union

@@ -2,7 +2,7 @@ import os
 
 from sentence_transformers import SentenceTransformer
 
-from modules.embeddings.base import AbstractEmbeddingModel
+from src.client_modules.embeddings.base import AbstractEmbeddingModel
 
 
 class TransformerEmbeddingModel(AbstractEmbeddingModel):

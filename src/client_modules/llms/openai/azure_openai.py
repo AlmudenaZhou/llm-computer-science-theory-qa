@@ -3,7 +3,7 @@ import logging
 
 from openai import AzureOpenAI
 
-from modules.llms.openai.base import BaseOpenAIClient
+from src.client_modules.llms.openai.base import BaseOpenAIClient
 
 
 logger = logging.getLogger(__name__)
