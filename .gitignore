@@ -3,6 +3,7 @@ data/*
 *.pyc
 __pycache__
 ollama/*
+.pytest_cache
 
 retrieval/.mage_data
 retrieval/.postgres
