@@ -38,10 +38,10 @@ class BaseOpenAIClient(ABC):
         logger.info(response.choices[0].message.content)
         return response
     
-    def embedding(self, model_name):
+    def embedding(self, query, model_name=None):
         model_name = model_name if model_name else self.model_name
         response = self.client.embeddings.create(
-            input = "Your text string goes here",
+            input = query,
             model=model_name
         )
 
