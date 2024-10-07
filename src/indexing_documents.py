@@ -12,7 +12,7 @@ logging.config.fileConfig('logger.conf')
 logger = logging.getLogger(__name__)
 
 from src.client_modules.elastic_search.elastic_search_client import ElasticSearchClient
-from src.client_modules.utils import check_embedding_model, import_embeddings
+from src.client_modules.utils import check_embedding_model, import_embeddings, get_embedding_model_name
 
 
 load_dotenv()
@@ -36,8 +36,8 @@ class IndexDocuments:
 
     @staticmethod
     def read_data():
-        with open("data/intents.json") as file:
-            intents = json.load(file)["intents"]
+        with open("data/all_qa_cleaned.json") as file:
+            intents = json.load(file)
         return intents
 
     def calc_embed_from_intents(self, intents):
@@ -85,13 +85,17 @@ class IndexDocuments:
 def main():
 
     dimension_mapping = {
-        "transformer": 768,
-        "azure_openai": 1536
+        "transformer": {"distilbert-base-nli-mean-tokens": 768},
+        "azure_openai": {"text-embedding-ada-002": 1536}
     }
 
     embedding_client = os.getenv("EMBEDDING_CLIENT", "transformer")
     check_embedding_model(embedding_client)
-    dimension = dimension_mapping[embedding_client]
+    embedding_model_name = get_embedding_model_name()
+    if embedding_model_name not in dimension_mapping[embedding_client]:
+        logger.error(f"{embedding_model_name} does not match with any of the dimension_mapping at {embedding_client}.
+                     Using this client you can choose: {list(dimension_mapping[embedding_client])}")
+    dimension = dimension_mapping[embedding_client][embedding_model_name]
 
     index_settings = {
         "settings": {
@@ -100,15 +104,16 @@ def main():
         },
         "mappings": {
             "properties": {
-                "tag": {"type": "text"},
                 "patterns": {"type": "text"},
                 "responses": {"type": "text"},
-                "text": {"type": "text"} ,
+                "document": {"type": "text"},
+                "text": {"type": "text"},
                 "vector_field": {"type": "dense_vector", "dims": dimension,
                                  "index": True, "similarity": "cosine"},
             }
         }
     }
+
     index_name = os.getenv("ELASTICSEARCH_INDEX_NAME", "cs-theory")
 
     host = os.getenv("ELASTICSEARCH_HOST", "localhost")

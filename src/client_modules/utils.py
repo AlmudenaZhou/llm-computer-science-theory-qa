@@ -76,4 +76,25 @@ def check_llm_model(emb_name):
     check_model_client_name(valid_list, emb_name, "LLM_CLIENT")
 
 
-print(get_parent_folders_inside_project())
+def get_embedding_model_name():
+    emb_client = os.getenv("EMBEDDING_CLIENT")
+    check_embedding_model(emb_client)
+
+    if emb_client == "transformer":
+        return os.getenv("TRANSFORMER_EMB_MODEL_NAME")
+    
+    elif emb_client == "azure_openai": 
+        return os.getenv("AZURE_OPENAI_EMB_DEPLOYMENT_NAME")
+
+def get_generation_model_name():
+    gen_client = os.getenv("EMBEDDING_CLIENT")
+    check_llm_model(gen_client)
+
+    if gen_client == "ollama":
+        return os.getenv("TRANSFORMER_EMB_MODEL_NAME")
+    
+    elif gen_client == "azure_openai": 
+        return os.getenv("AZURE_OPENAI_EMB_DEPLOYMENT_NAME")
+    
+    elif gen_client == "openai":
+        return os.getenv("OPENAI_MODEL")
