@@ -58,6 +58,11 @@ The steps are the generic steps of a RAG system.
     - Test there is no collisions with the ids. [test_qa_id_collisions.py](src/preprocessing/test_qa_id_collisions.py)
 1. Upload the info into the vector database:
     - Start the docker compose. Run in the terminal `docker compose up`.
-    - Run [indexing_documents.py](src/indexing_documents.py). This file will:
-        - Create the index in the vector database if the index does not exist or ELASTICSEARCH_FORCE_RECREATE=True in the `.env`. The name that will be used is the one stablished at the `.env` at ELASTICSEARCH_INDEX_NAME.
-        - Index the questions and answers in the vector database. The embedding model will depend on the EMBEDDING_CLIENT defined in the `.env` and the specific model name depending on the chosen client.
+    - Run [indexing_documents.py](src/retrieval/indexing_documents.py). This file will:
+        - Create the index in the vector database if the index does not exist or ELASTICSEARCH_FORCE_RECREATE=True in the `.env`. The name that will be used is the one stablished at the `.env` at ELASTICSEARCH_INDEX_NAME or you can specify one when instancing the IndexDocuments class.
+        - Index the questions and answers in the vector database. You can specify the embedding model when instancing the IndexDocuments class or it will depend on the EMBEDDING_CLIENT defined in the `.env`. The specific model name depending on the chosen client.
+
+## Preparing the retrieval evaluation
+This step considers that you already have the documents indexed.
+1. Generate the ground truth data running [create_ground_truth.ipynb](src/evaluation/create_ground_truth.ipynb). I have used Azure OpenAI with gpt-4o to create the ground truth, but you can use whatever you like.
+2. 
