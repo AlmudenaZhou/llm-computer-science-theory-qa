@@ -1,8 +1,11 @@
 import os
+import logging
 
 from openai import AzureOpenAI
 
 from src.client_modules.embeddings.base import AbstractEmbeddingModel
+
+logger = logging.getLogger(__name__)
 
 
 class AzureOpenAIEmbeddingModel(AbstractEmbeddingModel):
@@ -26,7 +29,7 @@ class AzureOpenAIEmbeddingModel(AbstractEmbeddingModel):
                 model=self.model_name,
             )
 
-            print(response.model_dump_json(indent=2))
+            logger.debug(response.model_dump_json(indent=2))
 
             embeddings_batch = [res_data.embedding for res_data in response.data]
 
