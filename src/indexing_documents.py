@@ -6,6 +6,8 @@ import logging.config
 from tqdm import tqdm
 from dotenv import load_dotenv
 
+import numpy as np
+
 sys.path.append(os.getcwd())
 
 logging.config.fileConfig('logger.conf')
@@ -27,7 +29,7 @@ class IndexDocuments:
                  force_recreate_index=os.getenv("ELASTICSEARCH_FORCE_RECREATE", 
                                                 "False") == "True"
                  ) -> None:
-
+        logger.info(f"Creating index {index_name} with embedding: {embedding_client}")
         self.index_settings = index_settings
         self.index_name = index_name
         self.embedding_client = embedding_client
@@ -40,46 +42,80 @@ class IndexDocuments:
             intents = json.load(file)
         return intents
 
-    def calc_embed_from_intents(self, intents):
+    @staticmethod
+    def get_text_embedding(emb_model, embedding_text):
+        embedding = emb_model.get_embeddings([embedding_text])[0]
+        if isinstance(embedding, np.ndarray):
+            embedding = embedding.tolist()
+        return embedding
 
-        emb_class = import_embeddings(self.embedding_client)
-        emb_model = emb_class()
-
-        embedding_text_template = ("""Equivalent questions: \"""{patterns}\"""
-        Equivalent answers:\"""{responses}\"""
+    def get_combined_qa_text_embedding(self, emb_model, intent):
+        embedding_text_template = ("""\"""{patterns}\"""
+        \"""{responses}\"""
         """)
 
+        embedding_text = embedding_text_template.format(
+            patterns='\n- '.join(intent["patterns"]),
+            responses='\n- '.join(intent["responses"])
+        )
 
-        for intent in tqdm(intents):
-            embedding_text = embedding_text_template.format(
-                patterns='\n- '.join(intent["patterns"]),
-                responses='\n- '.join(intent["responses"])
-            )
-            intent['text'] = embedding_text
-            intent['vector_field'] = emb_model.get_embeddings([embedding_text])[0].tolist()
+        embedding = self.get_text_embedding(emb_model, embedding_text)
 
-        return intents
+        return embedding_text, embedding
 
-    def add_documents_to_index(self, intents):
+    def get_questions_embedding(self, emb_model, intent):
+
+        embedding_text = '\n- '.join(intent["patterns"])
+        embedding = self.get_text_embedding(emb_model, embedding_text)
+        return embedding_text, embedding
+
+    def get_answers_embedding(self, emb_model, intent):
+
+        embedding_text = '\n- '.join(intent["responses"])
+        embedding = self.get_text_embedding(emb_model, embedding_text)
+        return embedding_text, embedding
+
+    def get_complete_intent_for_indexing(self, emb_model, intent):
+
+        comb_text, comb_embedding = self.get_combined_qa_text_embedding(emb_model, intent)
+
+        intent["comb_qa"] = comb_text
+        intent["combined_qa_vector"] = comb_embedding
+        print(len(comb_embedding), type(comb_embedding))
+
+        questions_text, questions_embedding = self.get_questions_embedding(emb_model, intent)
+        intent["patterns"] = questions_text
+        intent["questions_vector"] = questions_embedding
+
+        answers_text, answers_embedding = self.get_answers_embedding(emb_model, intent)
+        intent["responses"] = answers_text
+        intent["answers_vector"] = answers_embedding
+
+        return intent
+
+    def add_document_to_index(self, intent):
 
         try:
-            self.es_client.index_documents(index_name=self.index_name, documents=intents)
+            self.es_client.index_documents(index_name=self.index_name, documents=[intent])
         except Exception as e:
             print(e)
 
     def main_indexing_workflow(self):
         intents = self.read_data()
-        intents = self.calc_embed_from_intents(intents)
-
-        if self.force_recreate:
+        if self.force_recreate_index:
             self.es_client.delete_index(self.index_name)
 
         if not self.es_client.index_exists(self.index_name):
             self.es_client.create_index(index_name=self.index_name, 
                                         index_settings=self.index_settings)
 
-        self.add_documents_to_index(intents, self.es_client, self.index_name)
+        emb_class = import_embeddings(self.embedding_client)
+        emb_model = emb_class()
 
+        for intent in tqdm(intents):
+            intent = self.get_complete_intent_for_indexing(emb_model, intent)
+
+            self.add_document_to_index(intent)
 
 
 def main():
@@ -93,8 +129,8 @@ def main():
     check_embedding_model(embedding_client)
     embedding_model_name = get_embedding_model_name()
     if embedding_model_name not in dimension_mapping[embedding_client]:
-        logger.error(f"{embedding_model_name} does not match with any of the dimension_mapping at {embedding_client}.
-                     Using this client you can choose: {list(dimension_mapping[embedding_client])}")
+        logger.error(f"{embedding_model_name} does not match with any of the dimension_mapping at {embedding_client}."
+                     f"Using this client you can choose: {list(dimension_mapping[embedding_client])}")
     dimension = dimension_mapping[embedding_client][embedding_model_name]
 
     index_settings = {
@@ -107,9 +143,13 @@ def main():
                 "patterns": {"type": "text"},
                 "responses": {"type": "text"},
                 "document": {"type": "text"},
-                "text": {"type": "text"},
-                "vector_field": {"type": "dense_vector", "dims": dimension,
-                                 "index": True, "similarity": "cosine"},
+                "comb_qa": {"type": "text"},
+                "combined_qa_vector": {"type": "dense_vector", "dims": dimension,
+                                       "index": True, "similarity": "cosine"},
+                "questions_vector": {"type": "dense_vector", "dims": dimension,
+                                     "index": True, "similarity": "cosine"},
+                "answers_vector": {"type": "dense_vector", "dims": dimension,
+                                   "index": True, "similarity": "cosine"},
             }
         }
     }
