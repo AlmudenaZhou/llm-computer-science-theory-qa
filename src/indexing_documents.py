@@ -25,14 +25,14 @@ class IndexDocuments:
     def __init__(self, index_settings, 
                  es_client=ElasticSearchClient(),
                  index_name=os.getenv("ELASTICSEARCH_INDEX_NAME", "cs-theory"),
-                 embedding_client=os.getenv("EMBEDDING_CLIENT", "transformer"), 
+                 embedding_client=None, 
                  force_recreate_index=os.getenv("ELASTICSEARCH_FORCE_RECREATE", 
                                                 "False") == "True"
                  ) -> None:
-        logger.info(f"Creating index {index_name} with embedding: {embedding_client}")
+        logger.info(f"Index documents to '{index_name}' with embedding: {embedding_client}")
         self.index_settings = index_settings
         self.index_name = index_name
-        self.embedding_client = embedding_client
+        self.embedding_client = embedding_client if not None else import_embeddings("transformers")()
         self.force_recreate_index = force_recreate_index
         self.es_client = es_client
 
@@ -42,56 +42,60 @@ class IndexDocuments:
             intents = json.load(file)
         return intents
 
-    @staticmethod
-    def get_text_embedding(emb_model, embedding_text):
-        embedding = emb_model.get_embeddings([embedding_text])[0]
+    def get_text_embedding(self, embedding_text):
+        embedding = self.embedding_client.get_embeddings([embedding_text])[0]
         if isinstance(embedding, np.ndarray):
             embedding = embedding.tolist()
         return embedding
 
-    def get_combined_qa_text_embedding(self, emb_model, intent):
-        embedding_text_template = ("""\"""{patterns}\"""
-        \"""{responses}\"""
-        """)
+    def get_combined_qa_embedding(self, intent):
+        embedding_text_template = ("""Question: {patterns}\nAnswer:{responses}""")
 
         embedding_text = embedding_text_template.format(
-            patterns='\n- '.join(intent["patterns"]),
-            responses='\n- '.join(intent["responses"])
+            patterns=intent["patterns"][0],
+            responses=intent["responses"][0]
         )
 
-        embedding = self.get_text_embedding(emb_model, embedding_text)
+        embedding = self.get_text_embedding(embedding_text)
 
-        return embedding_text, embedding
+        full_text = ("""Questions:\n- {'\n- '.join(intent["patterns"])}\nAnswers:\n- {'\n- '.join(intent["responses"]}""")
 
-    def get_questions_embedding(self, emb_model, intent):
+        return full_text, embedding_text, embedding
 
-        embedding_text = '\n- '.join(intent["patterns"])
-        embedding = self.get_text_embedding(emb_model, embedding_text)
-        return embedding_text, embedding
+    def get_questions_embedding(self, intent):
 
-    def get_answers_embedding(self, emb_model, intent):
+        full_text = '\n- '.join(intent["patterns"])
+        embedding_text = intent["patterns"][-1]
+        embedding = self.get_text_embedding(embedding_text)
+        return full_text, embedding_text, embedding
 
-        embedding_text = '\n- '.join(intent["responses"])
-        embedding = self.get_text_embedding(emb_model, embedding_text)
-        return embedding_text, embedding
+    def get_answers_embedding(self, intent):
+        full_text = '\n- '.join(intent["responses"])
+        embedding_text = intent["responses"][-1]
+        embedding = self.get_text_embedding(embedding_text)
+        return full_text, embedding_text, embedding
 
-    def get_complete_intent_for_indexing(self, emb_model, intent):
+    def get_complete_intent_for_indexing(self, intent):
+        es_doc = {}
+        questions_full, questions_text, questions_embedding = self.get_questions_embedding(intent)
+        es_doc["questions"] = questions_full
+        es_doc["questions_vector_text"] = questions_text
+        es_doc["questions_vector"] = questions_embedding
 
-        comb_text, comb_embedding = self.get_combined_qa_text_embedding(emb_model, intent)
+        answers_full, answers_text, answers_embedding = self.get_answers_embedding(intent)
+        es_doc["answers"] = answers_full
+        es_doc["answers_vector_text"] = answers_text
+        es_doc["answers_vector"] = answers_embedding
 
-        intent["comb_qa"] = comb_text
-        intent["combined_qa_vector"] = comb_embedding
-        print(len(comb_embedding), type(comb_embedding))
+        comb_full, comb_text, comb_embedding = self.get_combined_qa_embedding(intent)
+        es_doc["combined_qa"] = comb_full
+        es_doc["combined_qa_vector_text"] = comb_text
+        es_doc["combined_qa_vector"] = comb_embedding
 
-        questions_text, questions_embedding = self.get_questions_embedding(emb_model, intent)
-        intent["patterns"] = questions_text
-        intent["questions_vector"] = questions_embedding
+        es_doc["id"] = intent["id"]
+        es_doc["document"] = intent["document"]
 
-        answers_text, answers_embedding = self.get_answers_embedding(emb_model, intent)
-        intent["responses"] = answers_text
-        intent["answers_vector"] = answers_embedding
-
-        return intent
+        return es_doc
 
     def add_document_to_index(self, intent):
 
@@ -109,29 +113,23 @@ class IndexDocuments:
             self.es_client.create_index(index_name=self.index_name, 
                                         index_settings=self.index_settings)
 
-        emb_class = import_embeddings(self.embedding_client)
-        emb_model = emb_class()
-
         for intent in tqdm(intents):
-            intent = self.get_complete_intent_for_indexing(emb_model, intent)
+            intent = self.get_complete_intent_for_indexing(intent)
 
             self.add_document_to_index(intent)
 
 
 def main():
 
-    dimension_mapping = {
-        "transformer": {"distilbert-base-nli-mean-tokens": 768},
-        "azure_openai": {"text-embedding-ada-002": 1536}
-    }
-
-    embedding_client = os.getenv("EMBEDDING_CLIENT", "transformer")
-    check_embedding_model(embedding_client)
+    embedding_client_name = os.getenv("EMBEDDING_CLIENT", "transformer")
+    check_embedding_model(embedding_client_name)
+    embedding_client = import_embeddings(embedding_client_name)()
     embedding_model_name = get_embedding_model_name()
-    if embedding_model_name not in dimension_mapping[embedding_client]:
-        logger.error(f"{embedding_model_name} does not match with any of the dimension_mapping at {embedding_client}."
-                     f"Using this client you can choose: {list(dimension_mapping[embedding_client])}")
-    dimension = dimension_mapping[embedding_client][embedding_model_name]
+    if embedding_model_name not in embedding_client._model_dimensions:
+        logger.error(f"{embedding_model_name} does not match with any of the dimension_mapping at {embedding_client_name}."
+                     f"Using this client you can choose: {list(embedding_client._model_dimensions)}")
+        return None
+    dimension = embedding_client._model_dimensions[embedding_model_name]
 
     index_settings = {
         "settings": {
@@ -140,16 +138,17 @@ def main():
         },
         "mappings": {
             "properties": {
-                "patterns": {"type": "text"},
-                "responses": {"type": "text"},
+                "id": {"type": "text"},
                 "document": {"type": "text"},
-                "comb_qa": {"type": "text"},
-                "combined_qa_vector": {"type": "dense_vector", "dims": dimension,
-                                       "index": True, "similarity": "cosine"},
-                "questions_vector": {"type": "dense_vector", "dims": dimension,
-                                     "index": True, "similarity": "cosine"},
-                "answers_vector": {"type": "dense_vector", "dims": dimension,
-                                   "index": True, "similarity": "cosine"},
+                "questions": {"type": "text"},
+                "answers": {"type": "text"},
+                "combined_qa": {"type": "text"},
+                "questions_vector_text": {"type": "text"},
+                "answers_vector_text": {"type": "text"},
+                "combined_qa_vector_text": {"type": "text"},
+                "combined_qa_vector": {"type": "dense_vector", "dims": dimension},
+                "questions_vector": {"type": "dense_vector", "dims": dimension},
+                "answers_vector": {"type": "dense_vector", "dims": dimension},
             }
         }
     }
