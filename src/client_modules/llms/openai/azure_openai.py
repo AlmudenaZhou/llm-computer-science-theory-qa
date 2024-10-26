@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class AzureOpenAIClient(BaseOpenAIClient):
 
-    def __init__(self) -> None:
+    def __init__(self, model_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")) -> None:
         super().__init__()
         self.client = AzureOpenAI(
                 api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
@@ -18,5 +18,5 @@ class AzureOpenAIClient(BaseOpenAIClient):
                 azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
             )
             
-        self.model_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+        self.model_name = model_name
         logger.info("Instantiated AzureOpenAI client")
