@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 class AzureOpenAIEmbeddingModel(AbstractEmbeddingModel):
 
+    _model_dimensions = {"text-embedding-ada-002": 1536}
+    _model_max_context = {"text-embedding-ada-002": 8191}
+
     def __init__(self) -> None:
         super().__init__()
         self.client = AzureOpenAI(
@@ -22,6 +25,9 @@ class AzureOpenAIEmbeddingModel(AbstractEmbeddingModel):
 
     def get_embeddings(self, chunks: list[str]) -> list[list[float]]:
         embeddings = []
+
+        model_dim = self.get_model_dimension()
+
         for chunk in chunks:
 
             response = self.client.embeddings.create(
@@ -33,9 +39,9 @@ class AzureOpenAIEmbeddingModel(AbstractEmbeddingModel):
 
             embeddings_batch = [res_data.embedding for res_data in response.data]
 
-            if len(embeddings_batch[0]) == 1536:
+            if len(embeddings_batch[0]) == model_dim:
                 embeddings.extend(embeddings_batch)
             else:
-                raise ValueError
+                raise ValueError(f"Dimensions from {self.model_name} expected to be {model_dim}")
 
         return embeddings
