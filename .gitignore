@@ -4,6 +4,7 @@ data/*
 __pycache__
 ollama/*
 .pytest_cache
+esdata
 
 retrieval/.mage_data
 retrieval/.postgres
