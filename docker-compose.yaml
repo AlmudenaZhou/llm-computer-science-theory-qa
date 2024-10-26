@@ -43,30 +43,30 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # streamlit:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: streamlit
-  #   environment:
-  #     - ELASTIC_URL=http://elasticsearch:${ELASTIC_PORT:-9200}
-  #     - OLLAMA_URL=http://ollama:${OLLAMA_PORT:-11434}/v1/
-  #     - POSTGRES_HOST=postgres
-  #     - POSTGRES_DB=${POSTGRES_DB}
-  #     - POSTGRES_USER=${POSTGRES_USER}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  #     - EMBEDDING_CLIENT=${EMBEDDING_CLIENT}
-  #     - AZURE_OPENAI_EMB_DEPLOYMENT_NAME=${AZURE_OPENAI_EMB_DEPLOYMENT_NAME}
-  #     - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
-  #     - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
-  #     - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
-  #     - TRANSFORMER_EMB_MODEL_NAME=${TRANSFORMER_EMB_MODEL_NAME}
-  #   ports:
-  #     - "${STREAMLIT_PORT:-8501}:8501"
-  #   depends_on:
-  #     - elasticsearch
-  #     - ollama
-  #     - postgres
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: streamlit
+    environment:
+      - ELASTIC_URL=http://elasticsearch:${ELASTIC_PORT:-9200}
+      - OLLAMA_URL=http://ollama:${OLLAMA_PORT:-11434}/v1/
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - EMBEDDING_CLIENT=${EMBEDDING_CLIENT}
+      - AZURE_OPENAI_EMB_DEPLOYMENT_NAME=${AZURE_OPENAI_EMB_DEPLOYMENT_NAME}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - TRANSFORMER_EMB_MODEL_NAME=${TRANSFORMER_EMB_MODEL_NAME}
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+    depends_on:
+      - elasticsearch
+      - ollama
+      - postgres
 
   grafana:
     image: grafana/grafana:latest
