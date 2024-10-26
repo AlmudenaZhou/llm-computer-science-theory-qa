@@ -71,9 +71,9 @@ def check_embedding_model(emb_name):
     check_model_client_name(valid_list, emb_name, "EMBEDDING_CLIENT")
 
 
-def check_llm_model(emb_name):
+def check_llm_model(llm_name):
     valid_list = ["openai", "azure_openai", "ollama"]
-    check_model_client_name(valid_list, emb_name, "LLM_CLIENT")
+    check_model_client_name(valid_list, llm_name, "LLM_CLIENT")
 
 
 def get_embedding_model_name():
