@@ -11,10 +11,9 @@ This project will consist in a chatbot that will answer some computer science qu
 - **SentenceTransformers**: secondary embedding models
 - **ElasticSearch**: VectorDatabase
 - **Grafana and PostGres DB**: Monitoring
-- **Mage**: orchestration
 - **Streamlit**: app
 - **Python**: programming language
-- **Docker and docker-compose**: containers and orchestration
+- **Docker and docker-compose or podman**: containers and orchestration
 - **Conda**: package management
 - **Git and Github**: version control
 
@@ -39,11 +38,8 @@ conda activate <project_name>
 1. Create a data folder in the project directory
 2. Get the json from the kaggle link and save it in the data folder.
 3. Get the book's pdf. Create inside the data folder a books folder and save the pdf inside it.
-4. Copy `.env_example`, renamed the file into `.env` and fill the fields with your values.
-
-## Local Env Podman Setup
-
-1. From the project folder `podman compose up -d` to run the podman 
+4. Copy `.env_example`, renamed the file into `.env` and fill the fields with your values. This project is intended to be done with ollama/transformers or AzureOpenAI. In the `.env` you only need to fill the ones that you are using. If ollama or transformers are used, the models need to be downloaded properly and If AzureOpenAI is used, you need to add the keys and endpoint and do the deployment of the models properly. I won't be covering these things here.
+5. From the project folder `podman compose up -d` to run the podman or replace podman with `docker-compose` to run it with docker compose.
 
 # Steps
 
