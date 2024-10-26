@@ -50,6 +50,8 @@ services:
       - "9300:9300"
     networks:
       - app-network
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data
 
   ollama:
     image: ollama/ollama
