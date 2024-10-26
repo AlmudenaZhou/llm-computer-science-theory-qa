@@ -28,7 +28,7 @@ def evaluate(ground_truth, search_function):
     for q in tqdm(ground_truth):
         doc_id = q['id']
         results = search_function(q)
-        relevance = [d['id'] == doc_id for d in results]
+        relevance = [d['_source']['id'] == doc_id for d in results]
         relevance_total.append(relevance)
 
     return {
