@@ -1,3 +1,4 @@
+import os
 import jinja2
 
 from src.client_modules.utils import import_openai_llms
@@ -5,7 +6,7 @@ from src.client_modules.utils import import_openai_llms
 
 class Generation:
 
-    def __init__(self, llm_client=None, prompt_template_path="templates/") -> None:
+    def __init__(self, llm_client=None, prompt_template_path=os.getenv("GENERATION_TEMPLATE_PATH", "templates/")) -> None:
         self.llm_client = llm_client if not None else import_openai_llms("ollama")()
         self.prompt_template_path = prompt_template_path
 
