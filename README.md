@@ -3,14 +3,14 @@
 # Index
 - [Project Overview](#project-overview)
 - [Technologies](#technologies)
+- [Data](#data)
 - [Setup](#setup)
 - [How to use it](#how-to-use-it)
 - [Details of the project](#details-of-the-project)
 
 # Project Overview
 
-This project centers on building a chatbot capable of answering computer science or data science interview questions. The bot's responses are based on intents derived from the [Computer Science Dataset](https://www.kaggle.com/datasets/mujtabamatin/computer-science-theory-qa-dataset) and [500 Data Science Interview Questions and Answers by Vamsee Puligadda
-](https://www.kobo.com/us/es/ebook/500-data-science-interview-questions-and-answers?srsltid=AfmBOoqgwhGfV3MCxYC-YhUD98bP_-yQUTSM51PPpohxc-f-sYy3Rchr).
+This project centers on building a chatbot capable of answering computer science and data science questions. The bot's responses are based on intents derived from [different sources](#data).
 
 The chatbot uses a Retrieval-Augmented Generation (RAG) system to deliver the most relevant answers and is accessible through a user-friendly app. It includes experiments to evaluate the best retrieval and RAG approaches, as well as a monitoring dashboard to track costs, model performance, and response times.
 
@@ -25,6 +25,12 @@ The chatbot uses a Retrieval-Augmented Generation (RAG) system to deliver the mo
 - **Docker and docker-compose or podman**: containers and orchestration
 - **Conda**: package management
 - **Git and Github**: version control
+
+# Data
+
+- [Computer Science Dataset from Kaggle](https://www.kaggle.com/datasets/mujtabamatin/computer-science-theory-qa-dataset)
+- [500 Data Science Interview Questions and Answers by Vamsee Puligadda
+](https://www.kobo.com/us/es/ebook/500-data-science-interview-questions-and-answers?srsltid=AfmBOoqgwhGfV3MCxYC-YhUD98bP_-yQUTSM51PPpohxc-f-sYy3Rchr)
 
 # Setup
 
