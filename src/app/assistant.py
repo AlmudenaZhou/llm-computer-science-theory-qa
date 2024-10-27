@@ -22,16 +22,10 @@ def rag_workflow(query, llm_client):
     embedding_client = import_embeddings(embedding_client)()
     retrieval_inst = Retrieval(embedding_client=embedding_client)
     search_results = retrieval_inst.search_from_text(query)
-    print("------------ Search Results ------------")
-    print(search_results)
 
     generation_inst = Generation(llm_client=llm_client)
     prompt = generation_inst.build_chat_prompt(query, search_results)
-    print("------------ Prompt ------------")
-    print(prompt)
     response = generation_inst.generate_response_from_prompt(prompt)
-    print("------------ Response ------------")
-    print(response)
     return response
 
 
