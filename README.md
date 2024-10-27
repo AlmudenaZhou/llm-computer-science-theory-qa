@@ -181,3 +181,10 @@ Application monitoring is facilitated by Grafana dashboards, which pull data dir
 The `client_modules` folder contains standard client interfaces for interacting with various models, including language models (LLMs), embedding models, and Elasticsearch. This base code abstracts model calls, allowing consistent interaction across different models without needing model-specific code for each integration.
 
 This modular approach ensures flexibility and scalability, enabling easy updates and integrations across the project.
+
+
+# Future Steps
+
+- Add more books and additional sources to the vector database to enhance content diversity and robustness.
+- Shift from a question-answer intent-based approach to a chunk-oriented strategy, using combined Q&A pairs and incorporating supplementary information beyond fixed question-answer formats.
+- Refine prompt engineering for both chat interactions and relevance assessment prompts.
