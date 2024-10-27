@@ -17,9 +17,10 @@ def format_llm_answer(response):
     return answer, tokens
 
 
-def rag_workflow(query, llm_client):
-    embedding_client = os.getenv("EMBEDDING_CLIENT")
-    embedding_client = import_embeddings(embedding_client)()
+def rag_workflow(query, llm_client, embedding_client=None):
+    if embedding_client is None:
+        embedding_client_name = os.getenv("EMBEDDING_CLIENT")
+        embedding_client = import_embeddings(embedding_client_name)()
     retrieval_inst = Retrieval(embedding_client=embedding_client)
     search_results = retrieval_inst.search_from_text(query)
 
