@@ -117,6 +117,8 @@ All steps to create and populate the knowledge base are automated via [indexing/
 
 ## Evaluation Process
 
+### Retrieval Evaluation
+
 Once documents are indexed, the retrieval system is evaluated as follows:
 1. Ground Truth Creation: Generate ground truth data by running [create_ground_truth.ipynb](src/evaluation/create_ground_truth.ipynb). This example uses Azure OpenAI's GPT-4 to create the ground truth, though other models can be used.
 2. With [evaluation_ground_truth.csv](data/evaluation_ground_truth.csv) generated, use [retrieval_evaluation](src/evaluation/retrieval_evaluation.ipynb) to assess retrieval quality by measuring cosine similarity between database vectors and user queries. Three methods were tested:
@@ -131,11 +133,20 @@ Evaluation results (below) showed that Method 1 performed best.
 
 Note: Results were exceptionally accurate due to the similarity of interview questions in this field.
 
+### RAG Evaluation
+
+This project uses an LLM-as-judge approach to assess the quality of the Retrieval-Augmented Generation (RAG) system. The evaluation leverages a set of questions from the evaluation_ground_truth.csv file.
+
+Evaluation Process:
+1. Sampling Questions: A sample of 200 questions is selected from the [ground truth dataset](data/evaluation_ground_truth.csv).
+2. Relevance Judgement: The sampled questions are evaluated by `gpt-4o` and `gpt-35-turbo` to judge the relevance of each RAG-generated answer, focusing solely on the question-answer pair.
+3. Running the Evaluation: To perform this evaluation, run the [rag_evaluation.ipynb](src/evaluation/rag_evaluation.ipynb). This process will save the evaluation results in the data/evaluation directory.
+
 ## App
 
 This project features a Streamlit application with a user-friendly interface for submitting questions and providing feedback on the answers. The app includes two buttons for rating responses, though feedback is only enabled once an answer has been given. Upon receiving an answer, the app displays several metrics, including the OpenAI usage cost.
 
-**Key Features**
+#### Key Features
 - **User Interaction:** Input field allows users to submit questions, with two feedback buttons to evaluate responses.
 - **Answer Metrics:** Key metrics, including OpenAI API costs, are displayed after each answer, giving users immediate insight into usage.
 - **Historical conversations:** All past interactions are saved, allowing users to view a complete history of questions and answers.
