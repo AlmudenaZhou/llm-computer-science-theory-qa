@@ -1,9 +1,18 @@
 # llm-computer-science-theory-qa
 
-# Introduction
+# Index
+- [Project Overview](#project-overview)
+- [Technologies](#technologies)
+- [Setup](#setup)
+- [How to use it](#how-to-use-it)
+- [Details of the project](#details-of-the-project)
 
-This project will consist in a chatbot that will answer some computer science questions, based on the intents provided by [Computer Science Dataset](https://www.kaggle.com/datasets/mujtabamatin/computer-science-theory-qa-dataset) and [500 Data Science Interview Questions and Answers by Vamsee Puligadda
-](https://www.kobo.com/us/es/ebook/500-data-science-interview-questions-and-answers?srsltid=AfmBOoqgwhGfV3MCxYC-YhUD98bP_-yQUTSM51PPpohxc-f-sYy3Rchr). The user will be able to give feedback to the model, through the interface. The project will include: a RAG for choosing the questions more similar to the user query, a monitoring dasboard to control costs and analyze different models and metrics, evaluation pipelines for the vector database retrieval and prompting/llm response, and orchestration tool for handling the connections between modules.
+# Project Overview
+
+This project centers on building a chatbot capable of answering computer science or data science interview questions. The bot's responses are based on intents derived from the [Computer Science Dataset](https://www.kaggle.com/datasets/mujtabamatin/computer-science-theory-qa-dataset) and [500 Data Science Interview Questions and Answers by Vamsee Puligadda
+](https://www.kobo.com/us/es/ebook/500-data-science-interview-questions-and-answers?srsltid=AfmBOoqgwhGfV3MCxYC-YhUD98bP_-yQUTSM51PPpohxc-f-sYy3Rchr).
+
+The chatbot uses a Retrieval-Augmented Generation (RAG) system to deliver the most relevant answers and is accessible through a user-friendly app. It includes experiments to evaluate the best retrieval and RAG approaches, as well as a monitoring dashboard to track costs, model performance, and response times.
 
 # Technologies:
 - **Azure OpenAI**: main llm and embedding
@@ -21,44 +30,94 @@ This project will consist in a chatbot that will answer some computer science qu
 
 ## Anaconda Commands
 
-In the terminal run:
+In the terminal, run:
 
+```bash
+conda env create --name <project_name> --file=environment.yaml
 ```
-conda env create --name <project_name> --file=environment.yml
-```
-This will create the environment with the dependencies
 
-
-For activating the conda environment the following times, run:
-```
+This creates the environment with all required dependencies. To activate the environment in future sessions, use:
+```bash
 conda activate <project_name>
 ```
 
 ## Local Env Setup
-1. Create a data folder in the project directory
-2. Get the json from the kaggle link and save it in the data folder.
-3. Get the book's pdf. Create inside the data folder a books folder and save the pdf inside it.
-4. Copy `.env_example`, renamed the file into `.env` and fill the fields with your values. This project is intended to be done with ollama/transformers or AzureOpenAI. In the `.env` you only need to fill the ones that you are using. If ollama or transformers are used, the models need to be downloaded properly and If AzureOpenAI is used, you need to add the keys and endpoint and do the deployment of the models properly. I won't be covering these things here.
-5. From the project folder `podman compose up -d` to run the podman or replace podman with `docker-compose` to run it with docker compose.
 
-# Steps
+1. Create Data Directories:
 
-The steps are the generic steps of a RAG system.
+- In the project’s root directory, create a folder named data.
+- Inside data, add the JSON dataset from Kaggle.
+- Within data, create a books folder, and add the book’s PDF file there.
 
-## Creating the knowledge base:
+2. Environment Variables:
+
+- Copy .env_example to a new file named .env.
+- Fill in the values as needed, depending on whether you are using ollama/transformers or AzureOpenAI models.
+- If using AzureOpenAI, add the necessary API keys, endpoint, and ensure your model deployments are ready. This guide assumes familiarity with these configurations.
+
+3. Start Services with Podman or Docker:
+
+- From the project directory, run the following command:
+```bash
+podman compose up -d
+```
+Or, to use Docker Compose:
+```bash
+docker-compose up -d
+```
+
+# How to use it
+
+After setup:
+
+1. Indexing and Preprocessing: run [indexing/\_\_main__.py](src/indexing/__main__.py) to preprocess the book PDF and JSON, unify them into a single JSON, create an index, and index the questions in the Elasticsearch container. Ensure the conda environment is active for this step.
+2. Evaluation (Optional): To evaluate the retrieval system, you can use an existing ground truth or generate your own: run[retrieval_evaluation.ipynb](src/evaluation/retrieval_evaluation.ipynb) for evaluation. create a ground truth dataset with [generate_ground_truth.ipynb](src/evaluation/generate_ground_truth.ipynb).
+3. Ollama Model Setup (Optional): If using the ollama model, download the gemma:2b model before starting.
+4. Access the Streamlit App: With Docker or Podman running, the Streamlit app will be available at `http://localhost:8501`. Visit this URL in your browser to start using the app!
+
+# Details of the project
+
+This project follows the typical structure of a Retrieval-Augmented Generation (RAG) system.
+
+## Knowledge base Creation:
+
+All steps to create and populate the knowledge base are automated via [indexing/\_\_main__.py](src/indexing/__main__.py). The process is organized as follows:
 
 1. Preprocessing:
-    - Book: First, the text is extracted from the pdf and then the text is formatted in json with the question number, the question text and the answer. [add_pdf_books.ipynb](src/preprocessing/add_pdf_books.ipynb)
-    - Unify both book and cs qa jsons into one. [unify_qa_files.py](src/preprocessing/unify_qa_files.py)
-    - Cleaning the duplicated questions and answers. [dataset_cleaning.ipynb](src/preprocessing/dataset_cleaning.ipynb)
-    - Test there is no collisions with the ids. [test_qa_id_collisions.py](src/preprocessing/test_qa_id_collisions.py)
-1. Upload the info into the vector database:
-    - Start the docker compose. Run in the terminal `docker compose up`.
-    - Run [indexing_documents.py](src/retrieval/indexing_documents.py). This file will:
-        - Create the index in the vector database if the index does not exist or ELASTICSEARCH_FORCE_RECREATE=True in the `.env`. The name that will be used is the one stablished at the `.env` at ELASTICSEARCH_INDEX_NAME or you can specify one when instancing the IndexDocuments class.
-        - Index the questions and answers in the vector database. You can specify the embedding model when instancing the IndexDocuments class or it will depend on the EMBEDDING_CLIENT defined in the `.env`. The specific model name depending on the chosen client.
+    - Book Data: Extracts text from PDF files and formats it into a JSON structure with question numbers, text, and answers. [add_pdf_books.ipynb](src/indexing/preprocessing/add_pdf_books.ipynb)
+    - Data Unification: Combines book and CS QA JSON files into a unified format. [unify_qa_files.py](src/preprocessing/unify_qa_files.py)
+    - Data Cleaning: Removes duplicate questions and answers. [dataset_cleaning.ipynb](src/indexing/preprocessing/dataset_cleaning.ipynb)
+    - ID Collision Check: Test unique IDs across entries. [test_qa_id_collisions.py](src/indexing/preprocessing/test_qa_id_collisions.py)
+1. Indexing in the Vector Database:
+    - Start the Docker containers with `docker compose up`.
+    - Execute [indexing_documents.py](src/indexing/indexing_documents.py) which:
+        - Creates an index in the vector database (if not already present, or if `ELASTICSEARCH_FORCE_RECREATE=True` in `.env`).
+        - Indexes questions and answers in the vector database, using a model defined by `EMBEDDING_CLIENT` in `.env`, or specified directly when initializing the `IndexDocuments` class.
 
-## Preparing the retrieval evaluation
-This step considers that you already have the documents indexed.
-1. Generate the ground truth data running [create_ground_truth.ipynb](src/evaluation/create_ground_truth.ipynb). I have used Azure OpenAI with gpt-4o to create the ground truth, but you can use whatever you like.
-2. 
+## Evaluation Process
+
+Once documents are indexed, the retrieval system is evaluated as follows:
+1. Ground Truth Creation: Generate ground truth data by running [create_ground_truth.ipynb](src/evaluation/create_ground_truth.ipynb). This example uses Azure OpenAI's GPT-4 to create the ground truth, though other models can be used.
+2. With [evaluation_ground_truth.csv](data/evaluation_ground_truth.csv) generated, use [retrieval_evaluation](src/evaluation/retrieval_evaluation.ipynb) to assess retrieval quality by measuring cosine similarity between database vectors and user queries. Three methods were tested:
+
+- Method 1: Using the combined vector alone.
+- Method 2: Weighted mean, combining 0.5 of the combined vector with 0.25 each of question and answer vectors.
+- Method 3: Simple mean of combined, question, and answer vectors.
+
+Evaluation results (below) showed that Method 1 performed best. 
+
+The results were: ![](imgs/retrieval_evaluation_results.png)
+
+Note: Results were exceptionally accurate due to the similarity of interview questions in this field.
+
+## App and Monitoring
+
+This project features a Streamlit application with a user-friendly interface for submitting questions and providing feedback on the answers. The app includes two buttons for rating responses, though feedback is only enabled once an answer has been given. Upon receiving an answer, the app displays several metrics, including the OpenAI usage cost.
+
+**Key Features**
+- **User Interaction:** A simple input field allows users to submit questions, with two feedback buttons to evaluate responses.
+- **Answer Metrics:** After each answer, key metrics (e.g., OpenAI API costs) are shown directly on the interface.
+- **Data Storage:** All conversations are stored in a PostgreSQL database, with separate tables for conversation history and feedback.
+- **Monitoring and Analytics:** Integrated with Grafana dashboards to track metrics like feedback ratings, API costs, and response time.
+
+This app setup provides comprehensive insights into application performance, enabling continuous improvement based on user feedback and usage data.
