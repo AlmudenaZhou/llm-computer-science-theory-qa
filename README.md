@@ -49,6 +49,8 @@ conda activate <project_name>
 - Inside data, add the JSON dataset from Kaggle.
 - Within data, create a books folder, and add the book’s PDF file there.
 
+Note: The data used by this application is not included in the repository to avoid copyright issues.
+
 2. Environment Variables:
 
 - Copy .env_example to a new file named .env.
