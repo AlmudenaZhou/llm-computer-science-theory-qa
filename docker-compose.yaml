@@ -24,6 +24,8 @@ services:
       - OLLAMA_MODELS=/root/.ollama/models
     ports:
       - "11434:11434"
+    networks:
+      - app-network
     deploy:
       resources:
         reservations:
@@ -40,6 +42,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - app-network
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -49,7 +53,8 @@ services:
       dockerfile: Dockerfile
     container_name: streamlit
     environment:
-      - ELASTIC_URL=http://elasticsearch:${ELASTIC_PORT:-9200}
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=${ELASTIC_PORT:-9200}
       - OLLAMA_URL=http://ollama:${OLLAMA_PORT:-11434}/v1/
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=${POSTGRES_DB}
@@ -63,6 +68,8 @@ services:
       - TRANSFORMER_EMB_MODEL_NAME=${TRANSFORMER_EMB_MODEL_NAME}
     ports:
       - "${STREAMLIT_PORT:-8501}:8501"
+    networks:
+      - app-network
     depends_on:
       - elasticsearch
       - ollama
@@ -73,6 +80,8 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
+    networks:
+      - app-network
     volumes:
       - grafana_data:/var/lib/grafana
     environment:
@@ -88,4 +97,3 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge
