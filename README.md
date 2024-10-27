@@ -66,14 +66,33 @@ Or, to use Docker Compose:
 docker-compose up -d
 ```
 
+Note: the streamlit container creation is very long. (~1000s)
+
 # How to use it
 
 After setup:
 
-1. Indexing and Preprocessing: run [indexing/\_\_main__.py](src/indexing/__main__.py) to preprocess the book PDF and JSON, unify them into a single JSON, create an index, and index the questions in the Elasticsearch container. Ensure the conda environment is active for this step.
+1. Indexing and Preprocessing:
+Run [indexing/\_\_main__.py](src/indexing/__main__.py) to preprocess the book PDF and JSON, unify them into a single JSON, create an index, and index the questions in the Elasticsearch container. Ensure the conda environment is active for this step.
+```bash
+python src/indexing/__main__.py
+```
 2. Evaluation (Optional): To evaluate the retrieval system, you can use an existing ground truth or generate your own: run[retrieval_evaluation.ipynb](src/evaluation/retrieval_evaluation.ipynb) for evaluation. create a ground truth dataset with [generate_ground_truth.ipynb](src/evaluation/generate_ground_truth.ipynb).
-3. Ollama Model Setup (Optional): If using the ollama model, download the gemma:2b model before starting.
+3. Ollama Model Setup (Optional): If using the ollama model, download the `gemma:2b` model before starting.
 4. Access the Streamlit App: With Docker or Podman running, the Streamlit app will be available at `http://localhost:8501`. Visit this URL in your browser to start using the app!
+5. Grafana Dashboards: grafana will be available at `http://localhost:3000`. 
+    Log in using:
+    - Username: admin
+    - Password: Use the value of GRAFANA_ADMIN_PASSWORD from your .env file (default is admin).
+
+    After logging in, follow these steps to load the dashboards:
+    - Go to Home > Connections > Data Sources.
+    - Click on Add data source and select PostgreSQL.
+    - Enter the connection details from your `.env` file and name it `grafana-postgresql-datasource`.
+    - Click `Save & Test` to confirm the connection.
+    - Navigate to Dashboards > New > Import and import the [dashboards.json](data/grafana/dashboards.json) file.
+
+    If any panels do not display data, edit them to ensure they are connected to the correct data source.
 
 # Details of the project
 
@@ -106,18 +125,40 @@ Once documents are indexed, the retrieval system is evaluated as follows:
 
 Evaluation results (below) showed that Method 1 performed best. 
 
-The results were: ![](imgs/retrieval_evaluation_results.png)
+![](imgs/retrieval_evaluation_results.png)
 
 Note: Results were exceptionally accurate due to the similarity of interview questions in this field.
 
-## App and Monitoring
+## App
 
 This project features a Streamlit application with a user-friendly interface for submitting questions and providing feedback on the answers. The app includes two buttons for rating responses, though feedback is only enabled once an answer has been given. Upon receiving an answer, the app displays several metrics, including the OpenAI usage cost.
 
 **Key Features**
-- **User Interaction:** A simple input field allows users to submit questions, with two feedback buttons to evaluate responses.
-- **Answer Metrics:** After each answer, key metrics (e.g., OpenAI API costs) are shown directly on the interface.
-- **Data Storage:** All conversations are stored in a PostgreSQL database, with separate tables for conversation history and feedback.
-- **Monitoring and Analytics:** Integrated with Grafana dashboards to track metrics like feedback ratings, API costs, and response time.
+- **User Interaction:** Input field allows users to submit questions, with two feedback buttons to evaluate responses.
+- **Answer Metrics:** Key metrics, including OpenAI API costs, are displayed after each answer, giving users immediate insight into usage.
+- **Historical conversations:** All past interactions are saved, allowing users to view a complete history of questions and answers.
+- **Filter by Relevance:** Users can filter their question history based on relevance to easily locate previous inquiries.
+- **Feedback Statistics:** Track total feedback with counters for thumbs up and thumbs down, giving quick visibility into response quality.
+- **Data Storage:** All conversation data is stored in a PostgreSQL database, with dedicated tables for conversation history and user feedback.
+- **Monitoring and Analytics:** Integrated Grafana dashboards display metrics such as feedback ratings, API costs, and response times for performance and usage monitoring.
 
-This app setup provides comprehensive insights into application performance, enabling continuous improvement based on user feedback and usage data.
+This application is fully containerized using Docker and Docker Compose. The streamlit app is dockerized through [Dockerfile](Dockerfile).
+
+Photo of the app interface:
+![](imgs/app_photo.png)
+
+## Monitoring
+
+Application monitoring is facilitated by Grafana dashboards, which pull data directly from the PostgreSQL database for real-time metrics and insights.
+
+![](imgs/grafana_dashboards.png)
+
+### Insights
+- A significant portion of **non-relevant** responses are generated by `gpt-3.5-turbo`, indicating a noticeable difference in response quality compared to `gpt-4o` in terms of relevance.
+- The application has also been tested to identify when there is insufficient information to answer a question, which is marked as **NON_RELEVANT** in the dashboard metrics.
+
+## Client Modules
+
+The `client_modules` folder contains standard client interfaces for interacting with various models, including language models (LLMs), embedding models, and Elasticsearch. This base code abstracts model calls, allowing consistent interaction across different models without needing model-specific code for each integration.
+
+This modular approach ensures flexibility and scalability, enabling easy updates and integrations across the project.
