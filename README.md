@@ -111,7 +111,7 @@ This project follows the typical structure of a Retrieval-Augmented Generation (
 All steps to create and populate the knowledge base are automated via [indexing/\_\_main__.py](src/indexing/__main__.py). The process is organized as follows:
 
 1. Preprocessing:
-    - Book Data: Extracts text from PDF files and formats it into a JSON structure with question numbers, text, and answers. [add_pdf_books.ipynb](src/indexing/preprocessing/add_pdf_books.ipynb)
+    - Book Data: Extracts text from PDF files and formats it into a JSON structure with question numbers, text, and answers. uses < ç `pymupdf4llm` to extract text from source documents into a Markdown (.md) file. To identify and organize the questions and answers, various regex patterns are applied to the extracted text, ensuring accurate segmentation.[add_pdf_books.ipynb](src/indexing/preprocessing/add_pdf_books.ipynb)
     - Data Unification: Combines book and CS QA JSON files into a unified format. [unify_qa_files.py](src/preprocessing/unify_qa_files.py)
     - Data Cleaning: Removes duplicate questions and answers. [dataset_cleaning.ipynb](src/indexing/preprocessing/dataset_cleaning.ipynb)
     - ID Collision Check: Test unique IDs across entries. [test_qa_id_collisions.py](src/indexing/preprocessing/test_qa_id_collisions.py)
