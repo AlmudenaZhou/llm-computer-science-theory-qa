@@ -14,6 +14,8 @@ This project centers on building a chatbot capable of answering computer science
 
 The chatbot uses a Retrieval-Augmented Generation (RAG) system to deliver the most relevant answers and is accessible through a user-friendly app. It includes experiments to evaluate the best retrieval and RAG approaches, as well as a monitoring dashboard to track costs, model performance, and response times.
 
+![](imgs/app_photo.png)
+
 # Technologies:
 - **Azure OpenAI**: main llm and embedding
 - **Ollama**: secondary llms
@@ -163,7 +165,6 @@ This project features a Streamlit application with a user-friendly interface for
 
 This application is fully containerized using Docker and Docker Compose. The streamlit app is dockerized through [Dockerfile](Dockerfile).
 
-Photo of the app interface:
 ![](imgs/app_photo.png)
 
 ## Monitoring
